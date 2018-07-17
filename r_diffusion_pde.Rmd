@@ -1,0 +1,57 @@
+---
+title: "Partial Differential Model of the Diffusion-Reaction Equation"
+author: "David Ellison, PhD"
+date: "September 1, 2017"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Partial Differential Equation Libraries
+```{r Pull in needed Packages, results='hide'}
+suppressWarnings(suppressMessages(library(deSolve)))
+suppressWarnings(suppressMessages(require(ReacTran)))
+```
+
+## Explained 1D Diffusion-Reaction Equation Initial Values and Boundary Conditions
+In this example we consider the 1_D diffusion-reaction model:   
+
+$\frac{\partial C}{\partial t}= \frac{\partial}{\partial x} \left(D \cdot \frac{\partial C}{\partial x} \right)-Q$  
+with
+$C$ the concentration,  
+$t$ the time,  
+$x$ the distance from the origin,  
+$Q$ the consumption rate,  
+and the following boundary conditions:
+$\frac{\partial C}{\partial x_{x=0}} = 0$  
+$C_{x=10} = C_{ext}$  
+and we create `Grid` as 10 cm (**L**) into 1000 boxes (**N**) e.g. 100mm, or 0.1mm per step
+
+
+## Set up Coefficients & 1D function
+```{r Set Up Coefficients & functions}
+Grid <-setup.grid.1D(N=1000, L=10)
+D <- 1 #diffusion constant
+Q <- 1 #uptake rate
+Cext <- 20
+pde1D <-function(t, C, params){
+  tran=tran.1D(C=C, D=D, C.down=Cext, dx= Grid)$dC
+  list(tran-Q)
+}
+```
+
+## Model the Diffusion-Reaction Equation Over 100 Time Points (Days)
+```{r Model Over 100 time points & Graph}
+times <- seq(0,100,by=1) #time in days
+out <- ode.1D(y=rep(1, Grid$N),times=times,func=pde1D,parms=NULL,nspec=1)
+tail(out[,1:11],n=5) # the last five time points, for positions 1:10 ~1mm
+```
+
+## Visualize the Diffusion Equation over 100 Days, Approximates Steady-State
+```{r Graph the 100 Time Points}
+image(out, xlab="Time (days)", ylab="Distance (cm)", main="Diffusion PDE", add.contour=TRUE)
+```
